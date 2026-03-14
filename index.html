@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Кофе Будит — Specialty Coffee</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --ink:     #0F0A06;
+  --roast:   #1C1008;
+  --brown:   #3D1F0A;
+  --amber:   #C47B2B;
+  --gold:    #E8A84C;
+  --sand:    #F0DFC0;
+  --paper:   #FAF5EC;
+  --white:   #FFFFFF;
+  --muted:   #7A6550;
+  --light:   #C8B89A;
+
+  --ff-head: 'Fraunces', serif;
+  --ff-ui:   'Instrument Sans', sans-serif;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --t: 0.6s;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: var(--ff-ui); background: var(--paper); color: var(--ink); overflow-x: hidden; cursor: none; }
+
+/* ── CURSOR ── */
+.cursor {
+  position: fixed; z-index: 9999; pointer-events: none;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--amber); mix-blend-mode: multiply;
+  transform: translate(-50%,-50%);
+  transition: width 0.3s var(--ease), height 0.3s var(--ease), opacity 0.3s;
+}
+.cursor.big { width: 60px; height: 60px; opacity: 0.35; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--paper); }
+::-webkit-scrollbar-thumb { background: var(--amber); border-radius: 2px; }
+
+/* ══════════════════════════════
+   NAV
+══════════════════════════════ */
+nav {
+  position: fixed; inset: 0 0 auto 0; z-index: 500;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.6rem 3.5rem;
+  mix-blend-mode: normal;
+  transition: padding var(--t) var(--ease), background var(--t) var(--ease);
+}
+nav.scrolled {
+  padding: 1rem 3.5rem;
+  background: rgba(250,245,236,0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(196,123,43,0.12);
+}
+.nav-logo {
+  font-family: var(--ff-head); font-size: 1.35rem; font-weight: 900;
+  color: var(--white); text-decoration: none; letter-spacing: -0.02em;
+  transition: color var(--t);
+}
+nav.scrolled .nav-logo { color: var(--ink); }
+.nav-logo sup {
+  font-size: 0.45em; font-weight: 400; font-style: italic;
+  vertical-align: super; color: var(--gold); margin-left: 2px;
+}
+
+.nav-links { display: flex; align-items: center; gap: 2.8rem; list-style: none; }
+.nav-links a {
+  font-size: 0.78rem; font-weight: 500; letter-spacing: 0.12em;
+  text-transform: uppercase; text-decoration: none;
+  color: rgba(255,255,255,0.75); transition: color 0.3s;
+}
+nav.scrolled .nav-links a { color: var(--muted); }
+.nav-links a:hover { color: var(--gold) !important; }
+.nav-pill {
+  background: var(--amber); color: var(--ink) !important;
+  padding: 0.5rem 1.4rem; border-radius: 100px;
+  font-weight: 600 !important;
+  transition: background 0.3s, transform 0.2s !important;
+}
+.nav-pill:hover { background: var(--gold) !important; transform: scale(1.04); }
+
+.burger { display: none; background: none; border: none; cursor: pointer; padding: 4px; flex-direction: column; gap: 6px; }
+.burger span { display: block; height: 1.5px; background: var(--white); transition: var(--t); }
+.burger span:first-child { width: 28px; }
+.burger span:last-child  { width: 18px; }
+nav.scrolled .burger span { background: var(--ink); }
+
+.mob-overlay {
+  display: none; position: fixed; inset: 0; z-index: 490;
+  background: var(--roast); flex-direction: column;
+  align-items: flex-start; justify-content: center;
+  padding: 5rem 3.5rem; gap: 0.4rem;
+}
+.mob-overlay.open { display: flex; }
+.mob-overlay a {
+  font-family: var(--ff-head); font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 700; color: var(--sand); text-decoration: none;
+  letter-spacing: -0.03em; line-height: 1.15;
+  border-bottom: 1px solid rgba(255,255,255,0.06); width: 100%; padding: 0.6rem 0;
+  transition: color 0.25s, padding-left 0.25s;
+}
+.mob-overlay a:hover { color: var(--gold); padding-left: 1rem; }
+.mob-close {
+  position: absolute; top: 2rem; right: 3.5rem;
+  font-family: var(--ff-ui); font-size: 0.8rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--light); background: none; border: none;
+  cursor: pointer; transition: color 0.2s;
+}
+.mob-close:hover { color: var(--gold); }
+
+/* ══════════════════════════════
+   HERO
+══════════════════════════════ */
+#hero {
+  height: 100svh; min-height: 600px;
+  position: relative; overflow: hidden;
+  display: flex; align-items: flex-end;
+  padding: 0 3.5rem 5rem;
+}
+.hero-photo {
+  position: absolute; inset: 0;
+  background: url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1800&q=85&fit=crop') center/cover no-repeat;
+}
+.hero-photo::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(
+    170deg,
+    rgba(10,5,2,0.15) 0%,
+    rgba(10,5,2,0.5) 40%,
+    rgba(10,5,2,0.82) 100%
+  );
+}
+.hero-ticker {
+  position: absolute; top: 45%; left: 0; right: 0;
+  display: flex; overflow: hidden; z-index: 1; pointer-events: none;
+}
+.hero-ticker-track {
+  display: flex; gap: 4rem; white-space: nowrap;
+  animation: ticker 28s linear infinite;
+}
+.hero-ticker-track span {
+  font-family: var(--ff-head); font-size: clamp(5rem, 14vw, 11rem);
+  font-weight: 900; font-style: italic;
+  color: rgba(255,255,255,0.04); letter-spacing: -0.04em;
+  flex-shrink: 0;
+}
+@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+.hero-content {
+  position: relative; z-index: 2;
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: flex-end; width: 100%; gap: 2rem;
+}
+.hero-left {}
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--gold);
+  background: rgba(232,168,76,0.12); border: 1px solid rgba(232,168,76,0.25);
+  padding: 0.45rem 1rem; border-radius: 100px; margin-bottom: 1.5rem;
+}
+.hero-tag::before { content: '●'; font-size: 0.5em; }
+.hero-h1 {
+  font-family: var(--ff-head); font-size: clamp(3.5rem, 9vw, 8rem);
+  font-weight: 900; letter-spacing: -0.04em; line-height: 0.9;
+  color: var(--white);
+}
+.hero-h1 em { font-style: italic; color: var(--gold); display: block; }
+.hero-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 1.8rem;
+  max-width: 280px;
+}
+.hero-sub {
+  font-family: var(--ff-head); font-style: italic; font-size: 1.05rem;
+  font-weight: 300; color: rgba(255,255,255,0.55); line-height: 1.7;
+  text-align: right;
+}
+.hero-cta {
+  display: inline-flex; align-items: center; gap: 0.7rem;
+  background: var(--amber); color: var(--ink);
+  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; text-decoration: none;
+  padding: 1rem 2rem; border-radius: 100px;
+  transition: background var(--t) var(--ease), transform 0.3s, box-shadow 0.3s;
+  white-space: nowrap;
+  box-shadow: 0 0 0 0 rgba(196,123,43,0.4);
+}
+.hero-cta:hover {
+  background: var(--gold); transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(196,123,43,0.5);
+}
+.hero-cta svg { width: 16px; transition: transform 0.3s; }
+.hero-cta:hover svg { transform: translateX(4px); }
+
+.hero-scroll-line {
+  position: absolute; bottom: 0; left: 3.5rem;
+  width: 1px; height: 80px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.3));
+  z-index: 2;
+}
+
+/* ══════════════════════════════
+   MARQUEE BAR
+══════════════════════════════ */
+.marquee-bar {
+  background: var(--amber); overflow: hidden;
+  padding: 0.85rem 0; border-top: none;
+}
+.marquee-track {
+  display: flex; gap: 0; white-space: nowrap;
+  animation: marquee 20s linear infinite;
+}
+.marquee-track span {
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink);
+  padding: 0 2rem; flex-shrink: 0;
+}
+.marquee-track span::after { content: ' ✦ '; opacity: 0.5; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ══════════════════════════════
+   ABOUT
+══════════════════════════════ */
+#about {
+  display: grid; grid-template-columns: 1fr 1fr;
+  min-height: 85vh; overflow: hidden;
+}
+.about-photo-col {
+  position: relative; overflow: hidden;
+}
+.about-photo-col img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 1.2s var(--ease);
+}
+.about-photo-col:hover img { transform: scale(1.04); }
+.about-photo-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(28,16,8,0.4) 0%, transparent 60%);
+}
+.about-year-badge {
+  position: absolute; top: 3rem; left: 3rem;
+  font-family: var(--ff-head); font-size: 5rem; font-weight: 900;
+  color: rgba(255,255,255,0.12); letter-spacing: -0.05em; line-height: 1;
+  pointer-events: none;
+}
+
+.about-text-col {
+  background: var(--roast); padding: 7rem 5rem;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.section-eyebrow {
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--amber); margin-bottom: 1.4rem;
+  display: flex; align-items: center; gap: 0.8rem;
+}
+.section-eyebrow::after { content: ''; flex: 0 0 30px; height: 1px; background: var(--amber); }
+.about-h2 {
+  font-family: var(--ff-head); font-size: clamp(2.4rem, 4vw, 3.8rem);
+  font-weight: 700; letter-spacing: -0.03em; line-height: 1.05;
+  color: var(--sand); margin-bottom: 2rem;
+}
+.about-h2 em { font-style: italic; color: var(--gold); }
+.about-body {
+  font-family: var(--ff-head); font-style: italic;
+  font-size: 1.05rem; line-height: 1.85; font-weight: 300;
+  color: rgba(240,223,192,0.65); margin-bottom: 3rem;
+}
+.about-body p + p { margin-top: 1.1rem; }
+.about-stats {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding-top: 2.5rem; gap: 1rem;
+}
+.stat { }
+.stat-n {
+  font-family: var(--ff-head); font-size: 2.6rem; font-weight: 900;
+  color: var(--amber); letter-spacing: -0.04em; line-height: 1;
+}
+.stat-l {
+  font-size: 0.7rem; font-weight: 500; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(240,223,192,0.4); margin-top: 0.3rem;
+}
+
+/* ══════════════════════════════
+   MENU
+══════════════════════════════ */
+#menu { padding: 7rem 3.5rem; background: var(--paper); }
+.menu-top {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 4rem; flex-wrap: wrap; gap: 2rem;
+}
+.menu-top-left {}
+.menu-h2 {
+  font-family: var(--ff-head); font-size: clamp(2.8rem, 6vw, 5rem);
+  font-weight: 900; letter-spacing: -0.04em; line-height: 0.95;
+  color: var(--ink);
+}
+.menu-h2 em { font-style: italic; color: var(--amber); }
+.menu-top-right {
+  font-family: var(--ff-head); font-style: italic;
+  font-size: 1.05rem; color: var(--muted); max-width: 300px;
+  line-height: 1.7; text-align: right;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 1.2rem;
+}
+.menu-card {
+  position: relative; overflow: hidden; border-radius: 12px;
+  background: var(--ink); cursor: pointer;
+  transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
+}
+.menu-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 30px 80px rgba(15,10,6,0.2); }
+.menu-card.feature { grid-row: span 2; }
+
+.card-img {
+  width: 100%; height: 100%;
+  position: absolute; inset: 0;
+}
+.card-img img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.8s var(--ease);
+  display: block;
+}
+.menu-card:hover .card-img img { transform: scale(1.08); }
+.card-img::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(10,5,2,0.88) 0%, rgba(10,5,2,0.2) 55%, transparent 100%);
+  transition: opacity 0.4s;
+}
+.menu-card.feature .card-img::after {
+  background: linear-gradient(0deg, rgba(10,5,2,0.92) 0%, rgba(10,5,2,0.15) 50%, transparent 100%);
+}
+.card-body {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 1.8rem; z-index: 2;
+}
+.card-tag {
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 0.4rem;
+}
+.card-name {
+  font-family: var(--ff-head); font-weight: 700;
+  letter-spacing: -0.02em; color: var(--white);
+  line-height: 1.1; margin-bottom: 0.5rem;
+}
+.menu-card.feature .card-name { font-size: clamp(1.6rem, 3vw, 2.4rem); }
+.menu-card:not(.feature) .card-name { font-size: 1.2rem; }
+.card-desc {
+  font-family: var(--ff-head); font-style: italic; font-size: 0.88rem;
+  color: rgba(255,255,255,0.5); line-height: 1.55; margin-bottom: 1rem;
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.4s var(--ease), opacity 0.4s;
+  opacity: 0;
+}
+.menu-card.feature .card-desc,
+.menu-card:hover .card-desc { max-height: 80px; opacity: 1; }
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-price {
+  font-family: var(--ff-head); font-size: 1.25rem; font-weight: 700;
+  color: var(--gold);
+}
+.card-add {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(196,123,43,0.2); border: 1px solid rgba(196,123,43,0.4);
+  color: var(--gold); font-size: 1.1rem; display: flex; align-items: center;
+  justify-content: center; cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+}
+.card-add:hover { background: var(--amber); color: var(--ink); transform: rotate(90deg) scale(1.1); }
+
+/* card heights */
+.menu-card.feature { min-height: 560px; }
+.menu-card:not(.feature) { min-height: 260px; }
+
+/* ══════════════════════════════
+   FULL-WIDTH PHOTO BREAK
+══════════════════════════════ */
+.photo-break {
+  height: 60vh; min-height: 380px;
+  position: relative; overflow: hidden;
+}
+.photo-break img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 1.6s var(--ease);
+}
+.photo-break:hover img { transform: scale(1.04); }
+.photo-break-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(10,5,2,0.75) 0%, rgba(10,5,2,0.1) 60%);
+  display: flex; align-items: center; padding: 0 8%;
+}
+.photo-break-text {
+  font-family: var(--ff-head); font-size: clamp(2rem, 5vw, 4.5rem);
+  font-weight: 300; font-style: italic; color: var(--sand);
+  max-width: 600px; line-height: 1.2; letter-spacing: -0.02em;
+}
+.photo-break-text strong { font-weight: 900; font-style: normal; display: block; color: var(--white); }
+
+/* ══════════════════════════════
+   CONTACT
+══════════════════════════════ */
+#contact {
+  display: grid; grid-template-columns: 1fr 1fr;
+  min-height: 80vh; overflow: hidden;
+}
+.contact-left {
+  background: var(--ink); padding: 7rem 5rem;
+  display: flex; flex-direction: column; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.contact-left::before {
+  content: '';
+  position: absolute; right: -100px; bottom: -100px;
+  width: 400px; height: 400px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(196,123,43,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.contact-h2 {
+  font-family: var(--ff-head); font-size: clamp(2.6rem, 4.5vw, 4.2rem);
+  font-weight: 900; letter-spacing: -0.04em; line-height: 0.95;
+  color: var(--sand); margin-bottom: 3rem;
+}
+.contact-h2 em { font-style: italic; color: var(--amber); }
+
+.contact-item {
+  display: flex; gap: 1.4rem; align-items: flex-start; margin-bottom: 2.2rem;
+}
+.ci-icon {
+  width: 46px; height: 46px; flex-shrink: 0; border-radius: 10px;
+  background: rgba(196,123,43,0.1); border: 1px solid rgba(196,123,43,0.2);
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+  transition: background 0.3s;
+}
+.contact-item:hover .ci-icon { background: rgba(196,123,43,0.25); }
+.ci-label {
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--amber); margin-bottom: 0.35rem;
+}
+.ci-val {
+  font-family: var(--ff-head); font-style: italic; font-size: 1.05rem;
+  color: rgba(240,223,192,0.7); line-height: 1.5;
+}
+
+.contact-right { position: relative; overflow: hidden; }
+.contact-right img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 1.2s var(--ease);
+}
+.contact-right:hover img { transform: scale(1.04); }
+.hours-card {
+  position: absolute; bottom: 3rem; left: 3rem; right: 3rem;
+  background: rgba(10,5,2,0.85); backdrop-filter: blur(16px);
+  border: 1px solid rgba(196,123,43,0.2); border-radius: 16px;
+  padding: 2rem 2.2rem;
+}
+.hours-title {
+  font-family: var(--ff-head); font-size: 1rem; font-weight: 700;
+  color: var(--sand); margin-bottom: 1.2rem;
+  letter-spacing: -0.01em;
+}
+.hours-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.55rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 0.85rem;
+}
+.hours-row:last-child { border-bottom: none; }
+.h-day { color: rgba(240,223,192,0.5); font-weight: 400; }
+.h-time { color: var(--gold); font-weight: 600; font-family: var(--ff-head); font-style: italic; }
+
+/* ══════════════════════════════
+   FOOTER
+══════════════════════════════ */
+footer {
+  background: var(--roast); padding: 3rem 3.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.footer-logo {
+  font-family: var(--ff-head); font-size: 1.4rem; font-weight: 900;
+  color: var(--sand); text-decoration: none; letter-spacing: -0.02em;
+}
+.footer-logo sup { font-size: 0.4em; color: var(--amber); font-style: italic; vertical-align: super; }
+footer p { font-size: 0.78rem; color: rgba(240,223,192,0.3); letter-spacing: 0.04em; }
+.footer-links { display: flex; gap: 2rem; }
+.footer-links a {
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(240,223,192,0.4);
+  text-decoration: none; transition: color 0.25s;
+}
+.footer-links a:hover { color: var(--amber); }
+
+/* ══════════════════════════════
+   SCROLL REVEAL
+══════════════════════════════ */
+.sr { opacity: 0; transform: translateY(40px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
+.sr.d1 { transition-delay: 0.05s; }
+.sr.d2 { transition-delay: 0.15s; }
+.sr.d3 { transition-delay: 0.25s; }
+.sr.d4 { transition-delay: 0.35s; }
+.sr.visible { opacity: 1; transform: none; }
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+@media (max-width: 1024px) {
+  .menu-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+  .menu-card.feature { grid-row: span 1; min-height: 300px; }
+  #about, #contact { grid-template-columns: 1fr; }
+  .about-photo-col { height: 55vw; min-height: 300px; }
+  .contact-right { height: 60vw; min-height: 320px; }
+  .about-text-col { padding: 5rem 3.5rem; }
+  .contact-left { padding: 5rem 3.5rem; }
+}
+@media (max-width: 768px) {
+  nav { padding: 1.2rem 1.5rem; }
+  nav.scrolled { padding: 0.9rem 1.5rem; }
+  .nav-links { display: none; }
+  .burger { display: flex; }
+  #hero { padding: 0 1.5rem 4rem; }
+  .hero-content { grid-template-columns: 1fr; gap: 1.5rem; }
+  .hero-right { align-items: flex-start; max-width: 100%; }
+  .hero-sub { text-align: left; }
+  #menu { padding: 5rem 1.5rem; }
+  .menu-grid { grid-template-columns: 1fr; }
+  .menu-card.feature { min-height: 380px; }
+  .menu-card:not(.feature) { min-height: 240px; }
+  .menu-top { flex-direction: column; }
+  .menu-top-right { text-align: left; }
+  .about-text-col { padding: 4rem 1.5rem; }
+  .contact-left { padding: 4rem 1.5rem; }
+  .hours-card { left: 1.5rem; right: 1.5rem; bottom: 1.5rem; padding: 1.5rem; }
+  footer { padding: 2rem 1.5rem; flex-direction: column; text-align: center; }
+  .footer-links { justify-content: center; flex-wrap: wrap; gap: 1.2rem; }
+  body { cursor: auto; }
+  .cursor { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- custom cursor -->
+<div class="cursor" id="cursor"></div>
+
+<!-- ════ NAV ════ -->
+<nav id="nav">
+  <a href="#hero" class="nav-logo">Кофе Будит<sup>®</sup></a>
+  <ul class="nav-links">
+    <li><a href="#about">История</a></li>
+    <li><a href="#menu">Меню</a></li>
+    <li><a href="#contact">Контакты</a></li>
+    <li><a href="#contact" class="nav-pill">Заказать</a></li>
+  </ul>
+  <button class="burger" id="burger" aria-label="Меню">
+    <span style="width:28px"></span>
+    <span style="width:18px"></span>
+  </button>
+</nav>
+
+<div class="mob-overlay" id="mobOverlay">
+  <button class="mob-close" id="mobClose">✕ Закрыть</button>
+  <a href="#about"   class="mob-a">История</a>
+  <a href="#menu"    class="mob-a">Меню</a>
+  <a href="#contact" class="mob-a">Контакты</a>
+  <a href="#contact" class="mob-a">Заказать ↗</a>
+</div>
+
+<!-- ════ HERO ════ -->
+<section id="hero">
+  <div class="hero-photo"></div>
+
+  <div class="hero-ticker" aria-hidden="true">
+    <div class="hero-ticker-track">
+      <span>Specialty Coffee</span><span>Кофе Будит</span>
+      <span>Specialty Coffee</span><span>Кофе Будит</span>
+      <span>Specialty Coffee</span><span>Кофе Будит</span>
+      <span>Specialty Coffee</span><span>Кофе Будит</span>
+    </div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-left">
+      <div class="hero-tag">Specialty Coffee · Тараз</div>
+      <h1 class="hero-h1">
+        Каждый<br>глоток —<br><em>пробуждение.</em>
+      </h1>
+    </div>
+    <div class="hero-right">
+      <p class="hero-sub">Зёрна с лучших плантаций мира. Обжарка с любовью. Ваш утренний ритуал.</p>
+      <a href="#menu" class="hero-cta">
+        Смотреть меню
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-scroll-line"></div>
+</section>
+
+<!-- marquee bar -->
+<div class="marquee-bar" aria-hidden="true">
+  <div class="marquee-track">
+    <span>Specialty Coffee</span><span>Собственная обжарка</span>
+    <span>Сертифицированные бариста</span><span>Зёрна из 12 стран</span>
+    <span>Ежедневно с 7:00</span><span>Доставка по городу</span>
+    <span>Specialty Coffee</span><span>Собственная обжарка</span>
+    <span>Сертифицированные бариста</span><span>Зёрна из 12 стран</span>
+    <span>Ежедневно с 7:00</span><span>Доставка по городу</span>
+  </div>
+</div>
+
+<!-- ════ ABOUT ════ -->
+<section id="about">
+  <div class="about-photo-col sr">
+    <img src="https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=900&q=80&fit=crop" alt="Бариста за работой" loading="lazy"/>
+    <div class="about-photo-overlay"></div>
+    <div class="about-year-badge">2017</div>
+  </div>
+
+  <div class="about-text-col">
+    <p class="section-eyebrow sr">Наша история</p>
+    <h2 class="about-h2 sr d1">Рождены<br>из страсти<br>к <em>зерну.</em></h2>
+    <div class="about-body sr d2">
+      <p>В 2017 году два друга вернулись из поездки по Эфиопии с чемоданом редких зёрен и одной мечтой — создать место, где кофе перестаёт быть просто напитком.</p>
+      <p>Сегодня «Кофе Будит» — это собственная обжарочная, команда Q-грейдеров и пространство, где каждый гость чувствует себя как дома — но с исключительным кофе.</p>
+    </div>
+    <div class="about-stats sr d3">
+      <div class="stat"><div class="stat-n">12+</div><div class="stat-l">Сортов зёрен</div></div>
+      <div class="stat"><div class="stat-n">340</div><div class="stat-l">Чашек в день</div></div>
+      <div class="stat"><div class="stat-n">4.9★</div><div class="stat-l">Рейтинг</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ MENU ════ -->
+<section id="menu">
+  <div class="menu-top sr">
+    <div class="menu-top-left">
+      <p class="section-eyebrow">Фирменное меню</p>
+      <h2 class="menu-h2">Наши<br><em>хиты.</em></h2>
+    </div>
+    <p class="menu-top-right sr d2">Каждый напиток — результат сотен часов экспериментов с температурой, давлением и рецептурой.</p>
+  </div>
+
+  <div class="menu-grid">
+    <!-- Feature card -->
+    <div class="menu-card feature sr d1">
+      <div class="card-img">
+        <img src="https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=800&q=80&fit=crop" alt="Эспрессо" loading="lazy"/>
+      </div>
+      <div class="card-body">
+        <p class="card-tag">Классика · Сезонный</p>
+        <h3 class="card-name">Будит Эспрессо</h3>
+        <p class="card-desc">Двойной шот на эфиопской Йиргачеффе. Яркая кислотность, жасминовый аромат и долгое послевкусие горького шоколада.</p>
+        <div class="card-footer">
+          <span class="card-price">250 ₸</span>
+          <button class="card-add" aria-label="Добавить">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="menu-card sr d2">
+      <div class="card-img">
+        <img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?w=600&q=80&fit=crop" alt="Карамельный латте" loading="lazy"/>
+      </div>
+      <div class="card-body">
+        <p class="card-tag">Фирменный</p>
+        <h3 class="card-name">Карамельный Сон</h3>
+        <p class="card-desc">Латте с домашней карамелью и ванилью.</p>
+        <div class="card-footer">
+          <span class="card-price">490 ₸</span>
+          <button class="card-add" aria-label="Добавить">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="menu-card sr d3">
+      <div class="card-img">
+        <img src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&q=80&fit=crop" alt="Колд Брю" loading="lazy"/>
+      </div>
+      <div class="card-body">
+        <p class="card-tag">Холодный</p>
+        <h3 class="card-name">Колд Брю Тоник</h3>
+        <p class="card-desc">18 часов холодного заваривания + тоник.</p>
+        <div class="card-footer">
+          <span class="card-price">550 ₸</span>
+          <button class="card-add" aria-label="Добавить">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="menu-card sr d4">
+      <div class="card-img">
+        <img src="https://images.unsplash.com/photo-1485808191679-5f86510bd652?w=600&q=80&fit=crop" alt="Кортадо" loading="lazy"/>
+      </div>
+      <div class="card-body">
+        <p class="card-tag">Авторский</p>
+        <h3 class="card-name">Кортадо Especial</h3>
+        <p class="card-desc">Ристретто, тёплое молоко, кардамон.</p>
+        <div class="card-footer">
+          <span class="card-price">420 ₸</span>
+          <button class="card-add" aria-label="Добавить">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ PHOTO BREAK ════ -->
+<div class="photo-break">
+  <img src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1800&q=80&fit=crop" alt="Кофейные зёрна" loading="lazy"/>
+  <div class="photo-break-overlay">
+    <p class="photo-break-text sr">
+      Зёрна отбираются<br>лично.
+      <strong>Каждый месяц.</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ════ CONTACT ════ -->
+<section id="contact">
+  <div class="contact-left">
+    <p class="section-eyebrow sr">Найти нас</p>
+    <h2 class="contact-h2 sr d1">Приходите,<br>мы <em>ждём.</em></h2>
+
+    <div class="contact-item sr d2">
+      <div class="ci-icon">📍</div>
+      <div>
+        <p class="ci-label">Адрес</p>
+        <p class="ci-val">ул. Толе би, 42<br>Тараз, Жамбылская обл.</p>
+      </div>
+    </div>
+
+    <div class="contact-item sr d3">
+      <div class="ci-icon">📞</div>
+      <div>
+        <p class="ci-label">Телефон</p>
+        <p class="ci-val">+7 (726) 234-56-78</p>
+      </div>
+    </div>
+
+    <div class="contact-item sr d4">
+      <div class="ci-icon">✉️</div>
+      <div>
+        <p class="ci-label">Email</p>
+        <p class="ci-val">hello@kofebudit.kz</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-right sr d2">
+    <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=900&q=80&fit=crop" alt="Интерьер кофейни" loading="lazy"/>
+    <div class="hours-card">
+      <p class="hours-title">☕ Часы работы</p>
+      <div class="hours-row"><span class="h-day">Пн — Пт</span><span class="h-time">07:00 — 21:00</span></div>
+      <div class="hours-row"><span class="h-day">Суббота</span><span class="h-time">08:00 — 22:00</span></div>
+      <div class="hours-row"><span class="h-day">Воскресенье</span><span class="h-time">09:00 — 20:00</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ FOOTER ════ -->
+<footer>
+  <a href="#hero" class="footer-logo">Кофе Будит<sup>®</sup></a>
+  <p>© 2025 Кофе Будит — Specialty Coffee, Тараз</p>
+  <div class="footer-links">
+    <a href="#about">О нас</a>
+    <a href="#menu">Меню</a>
+    <a href="#contact">Контакты</a>
+    <a href="#">Instagram</a>
+    <a href="#">Telegram</a>
+  </div>
+</footer>
+
+<script>
+/* ── cursor */
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+});
+document.querySelectorAll('a,button,.menu-card').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('big'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('big'));
+});
+
+/* ── nav */
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 80);
+}, { passive: true });
+
+/* ── mobile menu */
+const burger = document.getElementById('burger');
+const overlay = document.getElementById('mobOverlay');
+const mobClose = document.getElementById('mobClose');
+burger.addEventListener('click', () => overlay.classList.toggle('open'));
+mobClose.addEventListener('click', () => overlay.classList.remove('open'));
+document.querySelectorAll('.mob-a').forEach(a => a.addEventListener('click', () => overlay.classList.remove('open')));
+
+/* ── scroll reveal */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.sr').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
